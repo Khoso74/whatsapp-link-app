@@ -77,45 +77,4 @@
   <table id="output">
     <thead>
       <tr>
-        <th>Name</th>
-        <th>Course</th>
-        <th>WhatsApp</th>
-        <th>Send Link</th>
-        <th>Debug Row</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  <script>
-    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSPoQGLF5A12ofBtm7w9XCpxxiY2_zTeW1_SO9nj93g9oHO-NeO01lnY4cVKhaA2H12yXH2Bo_E1gs6/pub?gid=1613124401&single=true&output=csv';
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx5yEBCIUsOm91vu9116zAtoh5HVTdrk9ud2f4_CoQAaLdusOLuZzNw3G7IDf6u-XOt/exec';
-
-    function loadData() {
-      Papa.parse(sheetURL, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function (results) {
-          const data = results.data;
-          const tbody = document.querySelector('#output tbody');
-          tbody.innerHTML = '';
-
-          let sentCount = 0;
-          let pendingCount = 0;
-
-          data.forEach(row => {
-            const name = row['Full Name']?.trim() || 'N/A';
-            const course = row['Select Course']?.trim() || 'N/A';
-            const number = row['Whatsapp Number']?.replace(/^0/, '92') || 'N/A';
-            const status = row['Status']?.trim().toLowerCase() || 'pending';
-
-            if (status === 'sent') sentCount++;
-            else pendingCount++;
-
-            const link = `https://wa.me/${number}?text=Assalamualaikum%20${name},%20aapka%20${course}%20mein%20admission%20confirm%20hai.`;
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td
+        <th>Name
