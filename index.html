@@ -4,24 +4,75 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WhatsApp Link App</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <!-- Papa Parse library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <!-- Chart.js library -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts: Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+    }
+    /* Ensure chart container has fixed size */
+    #chartContainer {
+      max-width: 300px;
+      max-height: 300px;
+      margin: auto;
+    }
+    /* Custom hover animation for buttons */
+    .whatsapp-btn {
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .whatsapp-btn:hover {
+      transform: scale(1.05);
+      background-color: #128C7E;
+    }
+    /* Table row hover effect */
+    tbody tr {
+      transition: background-color 0.2s ease;
+    }
+    tbody tr:hover {
+      background-color: #f3f4f6;
+    }
+  </style>
 </head>
-<body>
-  <table id="output">
-    <thead>
-      <tr>
-        <th>Full Name</th>
-        <th>Course</th>
-        <th>WhatsApp Number</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <canvas id="statusChart"></canvas>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-6">
+    <!-- Header -->
+    <h1 class="text-3xl font-semibold text-gray-800 mb-6 text-center">WhatsApp Admission Confirmation</h1>
+    
+    <!-- Main Content: Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Table Section -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-medium text-gray-700 mb-4">Student Data</h2>
+        <div class="overflow-x-auto">
+          <table id="output" class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-200 text-gray-600 text-sm uppercase">
+                <th class="py-3 px-4 text-left">Full Name</th>
+                <th class="py-3 px-4 text-left">Course</th>
+                <th class="py-3 px-4 text-left">WhatsApp Number</th>
+                <th class="py-3 px-4 text-left">Action</th>
+              </tr>
+            </thead>
+            <tbody class="text-gray-600"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- Chart Section -->
+      <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center">
+        <h2 class="text-xl font-medium text-gray-700 mb-4">Status Overview</h2>
+        <div id="chartContainer">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSPoQGLF5A12ofBtm7w9XCpxxiY2_zTeW1_SO9nj93g9oHO-NeO01lnY4cVKhaA2H12yXH2Bo_E1gs6/pub?gid=1613124401&single=true&output=csv';
@@ -53,15 +104,17 @@
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-              <td>${name}</td>
-              <td>${course}</td>
-              <td>${number}</td>
+              <td class="py-3 px-4 border-b">${name}</td>
+              <td class="py-3 px-4 border-b">${course}</td>
+              <td class="py-3 px-4 border-b">${number}</td>
             `;
 
             const td = document.createElement('td');
+            td.className = 'py-3 px-4 border-b';
             const sendLink = document.createElement('a');
             sendLink.href = link;
             sendLink.target = '_blank';
+            sendLink.className = 'whatsapp-btn inline-block bg-[#25D366] text-white px-4 py-2 rounded-md text-sm font-medium';
             sendLink.innerText = 'Send WhatsApp';
 
             sendLink.addEventListener('click', () => {
@@ -85,14 +138,22 @@
               labels: ['Sent', 'Pending'],
               datasets: [{
                 data: [sentCount, pendingCount],
-                backgroundColor: ['#2ecc71', '#e74c3c']
+                backgroundColor: ['#2ecc71', '#e74c3c'],
+                borderColor: ['#ffffff', '#ffffff'],
+                borderWidth: 2
               }]
             },
             options: {
               responsive: true,
               plugins: {
                 legend: {
-                  position: 'bottom'
+                  position: 'bottom',
+                  labels: {
+                    font: {
+                      size: 14,
+                      family: "'Poppins', sans-serif"
+                    }
+                  }
                 }
               }
             }
