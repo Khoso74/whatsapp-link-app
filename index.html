@@ -81,6 +81,7 @@
         <th>Course</th>
         <th>WhatsApp</th>
         <th>Send Link</th>
+<th>Debug Row</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -117,6 +118,10 @@ console.log(row);
             else pendingCount++;
 
             const link = `https://wa.me/${number}?text=Assalamualaikum%20${name},%20aapka%20${course}%20mein%20admission%20confirm%20hai.`;
+const debugTd = document.createElement('td');
+debugTd.textContent = JSON.stringify(row); // 
+tr.appendChild(debugTd);
+
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
