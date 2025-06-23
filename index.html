@@ -81,7 +81,7 @@
         <th>Course</th>
         <th>WhatsApp</th>
         <th>Send Link</th>
-<th>Debug Row</th>
+        <th>Debug Row</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -89,8 +89,8 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
   <script>
-    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSPoQGLF5A12ofBtm7w9XCpxxiY2_zTeW1_SO9nj93g9oHO-NeO01lnY4cVKhaA2H12yXH2Bo_E1gs6/pub?gid=1613124401&single=true&output=csv'; // ← YOUR SHEET LINK
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbwxFhfjQhBTz54fAEgxCgu29kMnkQuMVXM-sVApbTzIxQEar9YsdvlyNMWZ81ozsoiv/exec'; // ← YOUR APPS SCRIPT LINK
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSPoQGLF5A12ofBtm7w9XCpxxiY2_zTeW1_SO9nj93g9oHO-NeO01lnY4cVKhaA2H12yXH2Bo_E1gs6/pub?gid=1613124401&single=true&output=csv';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwxFhfjQhBTz54fAEgxCgu29kMnkQuMVXM-sVApbTzIxQEar9YsdvlyNMWZ81ozsoiv/exec';
 
     window.addEventListener('DOMContentLoaded', loadData);
 
@@ -108,20 +108,15 @@
           let pendingCount = 0;
 
           data.forEach(row => {
-console.log(row);
-            const name = row['Full Name'];
-            const course = row['Select Course'];
-            const number = row['Whatsapp Number']?.replace(/^0/, '92');
+            const name = row['Full Name']?.trim() || 'N/A';
+            const course = row['Select Course']?.trim() || 'N/A';
+            const number = row['Whatsapp Number']?.replace(/^0/, '92').trim() || 'N/A';
             const status = row['Status']?.trim().toLowerCase();
 
             if (status === 'sent') sentCount++;
             else pendingCount++;
 
             const link = `https://wa.me/${number}?text=Assalamualaikum%20${name},%20aapka%20${course}%20mein%20admission%20confirm%20hai.`;
-const debugTd = document.createElement('td');
-debugTd.textContent = JSON.stringify(row); // 
-tr.appendChild(debugTd);
-
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
@@ -136,7 +131,6 @@ tr.appendChild(debugTd);
             sendLink.target = '_blank';
             sendLink.innerText = 'Send WhatsApp';
 
-            // Status Update
             sendLink.addEventListener('click', () => {
               fetch(scriptURL, {
                 method: 'POST',
@@ -147,10 +141,14 @@ tr.appendChild(debugTd);
 
             td.appendChild(sendLink);
             tr.appendChild(td);
+
+            const debugTd = document.createElement('td');
+            debugTd.textContent = JSON.stringify(row);
+            tr.appendChild(debugTd);
+
             tbody.appendChild(tr);
           });
 
-          // Draw Chart
           const ctx = document.getElementById('statusChart').getContext('2d');
           new Chart(ctx, {
             type: 'pie',
