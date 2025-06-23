@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WhatsApp Link App</title>
-  <!-- Include Papa Parse library -->
+  <!-- Papa Parse library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <!-- Include Chart.js library (if not already included, as your code uses Chart) -->
+  <!-- Chart.js library -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -17,7 +17,6 @@
         <th>Course</th>
         <th>WhatsApp Number</th>
         <th>Action</th>
-        <th>Debug</th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -75,10 +74,6 @@
 
             td.appendChild(sendLink);
             tr.appendChild(td);
-
-            const debugTd = document.createElement('td');
-            debugTd.textContent = JSON.stringify(row);
-            tr.appendChild(debugTd);
 
             tbody.appendChild(tr);
           });
