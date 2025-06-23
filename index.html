@@ -1,88 +1,116 @@
-<script>
-  const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSPoQGLF5A12ofBtm7w9XCpxxiY2_zTeW1_SO9nj93g9oHO-NeO01lnY4cVKhaA2H12yXH2Bo_E1gs6/pub?gid=1613124401&single=true&output=csv';
-  const scriptURL = 'https://script.google.com/macros/s/AKfycbx5yEBCIUsOm91vu9116zAtoh5HVTdrk9ud2f4_CoQAaLdusOLuZzNw3G7IDf6u-XOt/exec';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WhatsApp Link App</title>
+  <!-- Include Papa Parse library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- Include Chart.js library (if not already included, as your code uses Chart) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <table id="output">
+    <thead>
+      <tr>
+        <th>Full Name</th>
+        <th>Course</th>
+        <th>WhatsApp Number</th>
+        <th>Action</th>
+        <th>Debug</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <canvas id="statusChart"></canvas>
 
-  function loadData() {
-    Papa.parse(sheetURL, {
-      download: true,
-      header: true,
-      skipEmptyLines: true,
-      complete: function (results) {
-        const data = results.data;
-        const tbody = document.querySelector('#output tbody');
-        tbody.innerHTML = '';
+  <script>
+    const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSPoQGLF5A12ofBtm7w9XCpxxiY2_zTeW1_SO9nj93g9oHO-NeO01lnY4cVKhaA2H12yXH2Bo_E1gs6/pub?gid=1613124401&single=true&output=csv';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx5yEBCIUsOm91vu9116zAtoh5HVTdrk9ud2f4_CoQAaLdusOLuZzNw3G7IDf6u-XOt/exec';
 
-        let sentCount = 0;
-        let pendingCount = 0;
+    function loadData() {
+      Papa.parse(sheetURL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function (results) {
+          const data = results.data;
+          const tbody = document.querySelector('#output tbody');
+          tbody.innerHTML = '';
 
-        data.forEach(row => {
-          const name = row['Full Name']?.trim() || 'N/A';
-          const course = row['Select Course']?.trim() || 'N/A';
-          const number = row['Whatsapp Number']?.replace(/^0/, '92').trim() || 'N/A';
-          const status = row['Status']?.trim().toLowerCase();
+          let sentCount = 0;
+          let pendingCount = 0;
 
-          if (status === 'sent') sentCount++;
-          else pendingCount++;
+          data.forEach(row => {
+            const name = row['Full Name']?.trim() || 'N/A';
+            const course = row['Select Course']?.trim() || 'N/A';
+            const number = row['Whatsapp Number']?.replace(/^0/, '92').trim() || 'N/A';
+            const status = row['Status']?.trim().toLowerCase();
 
-          const link = `https://wa.me/${number}?text=Assalamualaikum%20${name},%20aapka%20${course}%20mein%20admission%20confirm%20hai.`;
+            if (status === 'sent') sentCount++;
+            else pendingCount++;
 
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${name}</td>
-            <td>${course}</td>
-            <td>${number}</td>
-          `;
+            const link = `https://wa.me/${number}?text=Assalamualaikum%20${name},%20aapka%20${course}%20mein%20admission%20confirm%20hai.`;
 
-          const td = document.createElement('td');
-          const sendLink = document.createElement('a');
-          sendLink.href = link;
-          sendLink.target = '_blank';
-          sendLink.innerText = 'Send WhatsApp';
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${name}</td>
+              <td>${course}</td>
+              <td>${number}</td>
+            `;
 
-          sendLink.addEventListener('click', () => {
-            fetch(scriptURL, {
-              method: 'POST',
-              body: JSON.stringify({ number: number, status: 'Sent' }),
-              headers: { 'Content-Type': 'application/json' }
+            const td = document.createElement('td');
+            const sendLink = document.createElement('a');
+            sendLink.href = link;
+            sendLink.target = '_blank';
+            sendLink.innerText = 'Send WhatsApp';
+
+            sendLink.addEventListener('click', () => {
+              fetch(scriptURL, {
+                method: 'POST',
+                body: JSON.stringify({ number: number, status: 'Sent' }),
+                headers: { 'Content-Type': 'application/json' }
+              });
             });
+
+            td.appendChild(sendLink);
+            tr.appendChild(td);
+
+            const debugTd = document.createElement('td');
+            debugTd.textContent = JSON.stringify(row);
+            tr.appendChild(debugTd);
+
+            tbody.appendChild(tr);
           });
 
-          td.appendChild(sendLink);
-          tr.appendChild(td);
-
-          const debugTd = document.createElement('td');
-          debugTd.textContent = JSON.stringify(row);
-          tr.appendChild(debugTd);
-
-          tbody.appendChild(tr);
-        });
-
-        const ctx = document.getElementById('statusChart').getContext('2d');
-        new Chart(ctx, {
-          type: 'pie',
-          data: {
-            labels: ['Sent', 'Pending'],
-            datasets: [{
-              data: [sentCount, pendingCount],
-              backgroundColor: ['#2ecc71', '#e74c3c']
-            }]
-          },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {
-                position: 'bottom'
+          const ctx = document.getElementById('statusChart').getContext('2d');
+          new Chart(ctx, {
+            type: 'pie',
+            data: {
+              labels: ['Sent', 'Pending'],
+              datasets: [{
+                data: [sentCount, pendingCount],
+                backgroundColor: ['#2ecc71', '#e74c3c']
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  position: 'bottom'
+                }
               }
             }
-          }
-        });
-      }
-    });
-  }
+          });
+        }
+      });
+    }
 
-  // ✅ Make it accessible globally
-  window.loadData = loadData;
+    // Make it accessible globally
+    window.loadData = loadData;
 
-  // ✅ Load on page load
-  window.addEventListener('DOMContentLoaded', loadData);
-</script>
+    // Load on page load
+    window.addEventListener('DOMContentLoaded', loadData);
+  </script>
+</body>
+</html>
