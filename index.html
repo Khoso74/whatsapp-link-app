@@ -37,13 +37,26 @@
     tbody tr:hover {
       background-color: #f3f4f6;
     }
+    /* Reload button hover effect */
+    .reload-btn {
+      transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+    .reload-btn:hover {
+      transform: scale(1.05);
+      background-color: #2563eb;
+    }
   </style>
 </head>
 <body class="bg-gray-100">
   <div class="container mx-auto p-6">
     <!-- Header -->
     <h1 class="text-3xl font-semibold text-gray-800 mb-6 text-center">WhatsApp Admission Confirmation</h1>
-    
+    <!-- Reload Button -->
+    <div class="flex justify-end mb-4">
+      <button id="reloadButton" class="reload-btn inline-block bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center">
+        <span class="mr-2">🔄</span> Reload Data
+      </button>
+    </div>
     <!-- Main Content: Grid Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Table Section -->
@@ -63,7 +76,6 @@
           </table>
         </div>
       </div>
-      
       <!-- Chart Section -->
       <div class="bg-white rounded-lg shadow-md p-6 flex flex-col items-center">
         <h2 class="text-xl font-medium text-gray-700 mb-4">Status Overview</h2>
@@ -167,6 +179,9 @@
 
     // Load on page load
     window.addEventListener('DOMContentLoaded', loadData);
+
+    // Reload button event listener
+    document.getElementById('reloadButton').addEventListener('click', loadData);
   </script>
 </body>
 </html>
