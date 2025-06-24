@@ -53,8 +53,10 @@
     thead th {
       position: sticky;
       top: 0;
-      z-index: 10;
+      z-index: 20; /* Increased z-index */
       cursor: pointer;
+      background-color: var(--table-header-bg);
+      box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1); /* Subtle shadow for separation */
     }
     thead th:hover {
       background-color: var(--table-row-hover);
@@ -65,7 +67,7 @@
       --text-color: #1f2937;
       --card-bg: #ffffff;
       --card-shadow: rgba(0, 0, 0, 0.15);
-      --table-header-bg: #e5e7eb;
+      --table-header-bg: #e5e7eb; /* Solid background for headers */
       --table-row-hover: #f3f4f6;
       --badge-sent-bg: #dcfce7;
       --badge-sent-text: #166534;
@@ -83,7 +85,7 @@
       --text-color: #f9fafb;
       --card-bg: #374151;
       --card-shadow: rgba(0, 0, 0, 0.4);
-      --table-header-bg: #4b5563;
+      --table-header-bg: #4b5563; /* Solid background for headers */
       --table-row-hover: #4b5563;
       --badge-sent-bg: #064e3b;
       --badge-sent-text: #86efac;
@@ -254,6 +256,13 @@
       height: 100%;
       transition: width 0.3s ease;
     }
+    /* Table container */
+    .table-container {
+      max-height: 400px;
+      overflow-y: auto; /* Vertical scrolling */
+      overflow-x: auto; /* Horizontal scrolling if needed */
+      background-color: var(--card-bg); /* Match card background */
+    }
   </style>
 </head>
 <body>
@@ -290,7 +299,7 @@
       <!-- Table Section -->
       <div class="card rounded-lg shadow-md p-6">
         <h2 class="text-xl font-medium mb-4">Student Data</h2>
-        <div class="overflow-x-auto max-h-[400px]">
+        <div class="table-container">
           <table id="output" class="w-full border-collapse">
             <thead>
               <tr class="text-sm uppercase">
