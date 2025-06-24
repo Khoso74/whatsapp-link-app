@@ -52,6 +52,8 @@
       --badge-sent-text: #166534;
       --badge-pending-bg: #fee2e2;
       --badge-pending-text: #991b1b;
+      --message-sent-bg: #d1fae5;
+      --message-sent-text: #065f46;
     }
     /* Dark mode styles */
     [data-theme="dark"] {
@@ -64,6 +66,8 @@
       --badge-sent-text: #86efac;
       --badge-pending-bg: #7f1d1d;
       --badge-pending-text: #fca5a5;
+      --message-sent-bg: #064e3b;
+      --message-sent-text: #86efac;
     }
     body {
       background-color: var(--bg-color);
@@ -85,6 +89,10 @@
     .badge-pending {
       background-color: var(--badge-pending-bg);
       color: var(--badge-pending-text);
+    }
+    .message-sent {
+      background-color: var(--message-sent-bg);
+      color: var(--message-sent-text);
     }
     .theme-toggle {
       display: flex;
@@ -175,7 +183,6 @@
       const loadingSpinner = document.getElementById('loadingSpinner');
       loadingSpinner.style.display = 'inline-block';
       
-      // Add cache-busting query parameter
       const cacheBust = new Date().getTime();
       const urlWithCacheBust = `${sheetURL}&t=${cacheBust}`;
 
@@ -223,31 +230,42 @@
 
         const td = document.createElement('td');
         td.className = 'py-3 px-4 border-b';
-        const sendLink = document.createElement('a');
-        sendLink.href = `https://wa.me/${number}?text=Assalamualaikum%20${encodeURIComponent(name)},%20aapka%20${encodeURIComponent(course)}%20mein%20admission%20confirm%20hai.`;
-        sendLink.target = '_blank';
-        sendLink.className = 'whatsapp-btn inline-block bg-[#25D366] text-white px-4 py-2 rounded-md text-sm font-medium';
-        sendLink.innerText = 'Send WhatsApp';
 
-        sendLink.addEventListener('click', () => {
-          fetch(scriptURL, {
-            method: 'POST',
-            body: JSON.stringify({ number: number, status: 'Sent' }),
-            headers: { 'Content-Type': 'application/json' }
-          })
-          .then(response => {
-            if (!response.ok) throw new Error('Status update failed');
-            console.log('Status updated successfully');
-          })
-          .catch(error => {
-            console.error('Error updating status:', error);
-            alert('Failed to update status. Please try again.');
+        if (status === 'sent') {
+          // Show "Message Sent" badge for sent status
+          const sentBadge = document.createElement('span');
+          sentBadge.className = 'message-sent px-2 py-1 rounded-full text-xs font-medium';
+          sentBadge.innerText = 'Message Sent';
+          td.appendChild(sentBadge);
+        } else {
+          // Show "Send WhatsApp" button for pending status
+          const sendLink = document.createElement('a');
+          sendLink.href = `https://wa.me/${number}?text=Assalamualaikum%20${encodeURIComponent(name)},%20aapka%20${encodeURIComponent(course)}%20mein%20admission%20confirm%20hai.`;
+          sendLink.target = '_blank';
+          sendLink.className = 'whatsapp-btn inline-block bg-[#25D366] text-white px-4 py-2 rounded-md text-sm font-medium';
+          sendLink.innerText = 'Send WhatsApp';
+
+          sendLink.addEventListener('click', () => {
+            fetch(scriptURL, {
+              method: 'POST',
+              body: JSON.stringify({ number: number, status: 'Sent' }),
+              headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => {
+              if (!response.ok) throw new Error('Status update failed');
+              console.log('Status updated successfully');
+              loadData(); // Refresh table to show "Message Sent" badge
+            })
+            .catch(error => {
+              console.error('Error updating status:', error);
+              alert('Failed to update status. Please try again.');
+            });
           });
-        });
 
-        td.appendChild(sendLink);
+          td.appendChild(sendLink);
+        }
+
         tr.appendChild(td);
-
         tbody.appendChild(tr);
       });
     }
