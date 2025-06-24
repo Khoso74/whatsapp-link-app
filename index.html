@@ -16,34 +16,34 @@
     body {
       font-family: 'Poppins', sans-serif;
     }
-    /* Ensure chart container has fixed size */
     #chartContainer {
       max-width: 300px;
       max-height: 300px;
       margin: auto;
     }
-    /* Custom hover animation for buttons */
-    .whatsapp-btn {
+    .whatsapp-btn, .reload-btn {
       transition: transform 0.2s ease, background-color 0.2s ease;
     }
     .whatsapp-btn:hover {
       transform: scale(1.05);
       background-color: #128C7E;
     }
-    /* Table row hover effect */
+    .reload-btn:hover {
+      transform: scale(1.05);
+      background-color: #2563eb;
+    }
     tbody tr {
       transition: background-color 0.2s ease;
     }
     tbody tr:hover {
       background-color: #f3f4f6;
     }
-    /* Reload button hover effect */
-    .reload-btn {
-      transition: transform 0.2s ease, background-color 0.2s ease;
-    }
-    .reload-btn:hover {
-      transform: scale(1.05);
-      background-color: #2563eb;
+    /* Sticky table header */
+    thead th {
+      position: sticky;
+      top: 0;
+      background-color: #e5e7eb;
+      z-index: 10;
     }
   </style>
 </head>
@@ -51,8 +51,9 @@
   <div class="container mx-auto p-6">
     <!-- Header -->
     <h1 class="text-3xl font-semibold text-gray-800 mb-6 text-center">WhatsApp Admission Confirmation</h1>
-    <!-- Reload Button -->
-    <div class="flex justify-end mb-4">
+    <!-- Reload Button and Search Bar -->
+    <div class="flex flex-col sm:flex-row justify-between mb-4 gap-4">
+      <input id="searchInput" type="text" placeholder="Search by name, course, or number..." class="border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-1/2">
       <button id="reloadButton" class="reload-btn inline-block bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center">
         <span class="mr-2">🔄</span> Reload Data
       </button>
@@ -62,13 +63,14 @@
       <!-- Table Section -->
       <div class="bg-white rounded-lg shadow-md p-6">
         <h2 class="text-xl font-medium text-gray-700 mb-4">Student Data</h2>
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto max-h-[400px]">
           <table id="output" class="w-full border-collapse">
             <thead>
               <tr class="bg-gray-200 text-gray-600 text-sm uppercase">
                 <th class="py-3 px-4 text-left">Full Name</th>
                 <th class="py-3 px-4 text-left">Course</th>
                 <th class="py-3 px-4 text-left">WhatsApp Number</th>
+                <th class="py-3 px-4 text-left">Status</th>
                 <th class="py-3 px-4 text-left">Action</th>
               </tr>
             </thead>
@@ -90,91 +92,126 @@
     const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSPoQGLF5A12ofBtm7w9XCpxxiY2_zTeW1_SO9nj93g9oHO-NeO01lnY4cVKhaA2H12yXH2Bo_E1gs6/pub?gid=1613124401&single=true&output=csv';
     const scriptURL = 'https://script.google.com/macros/s/AKfycbx5yEBCIUsOm91vu9116zAtoh5HVTdrk9ud2f4_CoQAaLdusOLuZzNw3G7IDf6u-XOt/exec';
 
+    let allData = []; // Store all data for filtering
+
     function loadData() {
       Papa.parse(sheetURL, {
         download: true,
         header: true,
         skipEmptyLines: true,
         complete: function (results) {
-          const data = results.data;
-          const tbody = document.querySelector('#output tbody');
-          tbody.innerHTML = '';
-
-          let sentCount = 0;
-          let pendingCount = 0;
-
-          data.forEach(row => {
-            const name = row['Full Name']?.trim() || 'N/A';
-            const course = row['Select Course']?.trim() || 'N/A';
-            const number = row['Whatsapp Number']?.replace(/^0/, '92').trim() || 'N/A';
-            const status = row['Status']?.trim().toLowerCase();
-
-            if (status === 'sent') sentCount++;
-            else pendingCount++;
-
-            const link = `https://wa.me/${number}?text=Assalamualaikum%20${name},%20aapka%20${course}%20mein%20admission%20confirm%20hai.`;
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-              <td class="py-3 px-4 border-b">${name}</td>
-              <td class="py-3 px-4 border-b">${course}</td>
-              <td class="py-3 px-4 border-b">${number}</td>
-            `;
-
-            const td = document.createElement('td');
-            td.className = 'py-3 px-4 border-b';
-            const sendLink = document.createElement('a');
-            sendLink.href = link;
-            sendLink.target = '_blank';
-            sendLink.className = 'whatsapp-btn inline-block bg-[#25D366] text-white px-4 py-2 rounded-md text-sm font-medium';
-            sendLink.innerText = 'Send WhatsApp';
-
-            sendLink.addEventListener('click', () => {
-              fetch(scriptURL, {
-                method: 'POST',
-                body: JSON.stringify({ number: number, status: 'Sent' }),
-                headers: { 'Content-Type': 'application/json' }
-              });
-            });
-
-            td.appendChild(sendLink);
-            tr.appendChild(td);
-
-            tbody.appendChild(tr);
-          });
-
-          const ctx = document.getElementById('statusChart').getContext('2d');
-          new Chart(ctx, {
-            type: 'pie',
-            data: {
-              labels: ['Sent', 'Pending'],
-              datasets: [{
-                data: [sentCount, pendingCount],
-                backgroundColor: ['#2ecc71', '#e74c3c'],
-                borderColor: ['#ffffff', '#ffffff'],
-                borderWidth: 2
-              }]
-            },
-            options: {
-              responsive: true,
-              plugins: {
-                legend: {
-                  position: 'bottom',
-                  labels: {
-                    font: {
-                      size: 14,
-                      family: "'Poppins', sans-serif"
-                    }
-                  }
-                }
-              }
-            }
-          });
+          allData = results.data;
+          renderTable(allData);
+          updateChart(allData);
+          console.log('Available columns in CSV:', Object.keys(allData[0] || {}));
+        },
+        error: function (error) {
+          console.error('Error fetching CSV:', error);
         }
       });
     }
 
-    // Make it accessible globally
+    function renderTable(data) {
+      const tbody = document.querySelector('#output tbody');
+      tbody.innerHTML = '';
+
+      data.forEach(row => {
+        const name = row['Full Name']?.trim() || 'N/A';
+        const course = row['Select Course']?.trim() || 'N/A';
+        const number = row['Whatsapp Number']?.replace(/^0/, '92').trim() || 'N/A';
+        const status = row['Status']?.trim().toLowerCase() || 'pending';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="py-3 px-4 border-b">${name}</td>
+          <td class="py-3 px-4 border-b">${course}</td>
+          <td class="py-3 px-4 border-b">${number}</td>
+          <td class="py-3 px-4 border-b">
+            <span class="${status === 'sent' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} px-2 py-1 rounded-full text-xs font-medium">
+              ${status.charAt(0).toUpperCase() + status.slice(1)}
+            </span>
+          </td>
+        `;
+
+        const td = document.createElement('td');
+        td.className = 'py-3 px-4 border-b';
+        const sendLink = document.createElement('a');
+        sendLink.href = `https://wa.me/${number}?text=Assalamualaikum%20${encodeURIComponent(name)},%20aapka%20${encodeURIComponent(course)}%20mein%20admission%20confirm%20hai.`;
+        sendLink.target = '_blank';
+        sendLink.className = 'whatsapp-btn inline-block bg-[#25D366] text-white px-4 py-2 rounded-md text-sm font-medium';
+        sendLink.innerText = 'Send WhatsApp';
+
+        sendLink.addEventListener('click', () => {
+          fetch(scriptURL, {
+            method: 'POST',
+            body: JSON.stringify({ number: number, status: 'Sent' }),
+            headers: { 'Content-Type': 'application/json' }
+          })
+          .then(response => {
+            if (!response.ok) throw new Error('Status update failed');
+            console.log('Status updated successfully');
+          })
+          .catch(error => {
+            console.error('Error updating status:', error);
+          });
+        });
+
+        td.appendChild(sendLink);
+        tr.appendChild(td);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    function updateChart(data) {
+      let sentCount = 0;
+      let pendingCount = 0;
+
+      data.forEach(row => {
+        const status = row['Status']?.trim().toLowerCase() || 'pending';
+        if (status === 'sent') sentCount++;
+        else pendingCount++;
+      });
+
+      const ctx = document.getElementById('statusChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Sent', 'Pending'],
+          datasets: [{
+            data: [sentCount, pendingCount],
+            backgroundColor: ['#2ecc71', '#e74c3c'],
+            borderColor: ['#ffffff', '#ffffff'],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                font: { size: 14, family: "'Poppins', sans-serif" }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      const filteredData = allData.filter(row =>
+        (row['Full Name']?.toLowerCase() || '').includes(searchTerm) ||
+        (row['Select Course']?.toLowerCase() || '').includes(searchTerm) ||
+        (row['Whatsapp Number']?.toLowerCase() || '').includes(searchTerm)
+      );
+      renderTable(filteredData);
+      updateChart(filteredData);
+    });
+
+    // Make loadData accessible globally
     window.loadData = loadData;
 
     // Load on page load
