@@ -388,7 +388,7 @@
 
   <script>
     const sheetURL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSPoQGLF5A12ofBtm7w9XCpxxiY2_zTeW1_SO9nj93g9oHO-NeO01lnY4cVKhaA2H12yXH2Bo_E1gs6/pub?gid=1613124401&single=true&output=csv';
-    const scriptURL = 'https://script.google.com/macros/s/AKfycbx5yEBCIUsOm91vu9116zAtoh5HATdrkNud2f4_CoQAaLdusOLuZzNw3G7IDf6u-XOt/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbx5yEBCIUsOm91vu9116zAtoh5HVTdrk9ud2f4_CoQAaLdusOLuZzNw3G7IDf6u-XOt/exec'; // Corrected URL
 
     let allData = [];
     let sortColumn = null;
@@ -436,66 +436,81 @@
     }
 
     function exportToExcel() {
-      const data = getExportData();
-      const ws = XLSX.utils.json_to_sheet(data);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, 'Students');
-      XLSX.write(wb, 'students_data.xlsx');
-      showToast('Excel file exported!');
-      shareOptions('students_data.xlsx');
+      try {
+        const data = getExportData();
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Students');
+        XLSX.writeFile(wb, 'students_data.xlsx');
+        showToast('Excel file exported!');
+        shareOptions('students_data.xlsx');
+      } catch (error) {
+        console.error('Excel export error:', error);
+        showToast('Failed to export Excel.');
+      }
     }
 
     function exportToPDF() {
-      const element = document.querySelector('#output');
-      const opt = {
-        margin: 0.5,
-        filename: 'students_data.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-      };
-      html2pdf().set(opt).from(element).save().then(() => {
-        showToast('PDF file exported!');
-        shareOptions('students_data.pdf');
-      });
+      try {
+        const element = document.querySelector('#output');
+        const opt = {
+          margin: 0.5,
+          filename: 'students_data.pdf',
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(element).save().then(() => {
+          showToast('PDF file exported!');
+          shareOptions('students_data.pdf');
+        });
+      } catch (error) {
+        console.error('PDF export error:', error);
+        showToast('Failed to export PDF.');
+      }
     }
 
     function exportToWord() {
-      const { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType } = docx;
-      const data = getExportData();
-      const doc = new Document({
-        sections: [{
-          children: [
-            new Paragraph({ text: 'Student Data', heading: 'Heading1' }),
-            new Table({
-              width: { size: 100, type: WidthType.PERCENTAGE },
-              rows: [
-                new TableRow({
-                  children: [
-                    new TableCell({ children: [new Paragraph('Full Name')] }),
-                    new TableCell({ children: [new Paragraph('Course')] }),
-                    new TableCell({ children: [new Paragraph('WhatsApp Number')] }),
-                    new TableCell({ children: [new Paragraph('Status')] })
-                  ]
-                }),
-                ...data.map(row => new TableRow({
-                  children: [
-                    new TableCell({ children: [new Paragraph(row['Full Name'])] }),
-                    new TableCell({ children: [new Paragraph(row['Course'])] }),
-                    new TableCell({ children: [new Paragraph(row['WhatsApp Number'])] }),
-                    new TableCell({ children: [new Paragraph(row['Status'])] })
-                  ]
-                }))
-              ]
-            })
-          ]
-        }]
-      });
-      Packer.toBlob(doc).then(blob => {
-        saveAs(blob, 'students_data.docx');
-        showToast('Word document exported!');
-        shareOptions('students_data.docx');
-      });
+      try {
+        const { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType } = docx;
+        const data = getExportData();
+        const doc = new Document({
+          sections: [{
+            children: [
+              new Paragraph({ text: 'Student Data', heading: 'Heading1' }),
+              new Table({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                rows: [
+                  new TableRow({
+                    children: [
+                      new TableCell({ children: [new Paragraph('Full Name')] }),
+                      new TableCell({ children: [new Paragraph('Course')] }),
+                      new TableCell({ children: [new Paragraph('WhatsApp Number')] }),
+                      new TableCell({ children: [new Paragraph('Status')] })
+                    ]
+                  }),
+                  ...data.map(row => new TableRow({
+                    children: [
+                      new TableCell({ children: [new Paragraph(row['Full Name'])] }),
+                      new TableCell({ children: [new Paragraph(row['Course'])] }),
+                      new TableCell({ children: [new Paragraph(row['WhatsApp Number'])] }),
+                      new TableCell({ children: [new Paragraph(row['Status'])] })
+                    ]
+                  }))
+                ]
+              })
+            ]
+          }]
+        });
+        Packer.toBlob(doc).then(blob => {
+          saveAs(blob, 'students_data.docx');
+          showToast('Word document exported!');
+          shareOptions('students_data.docx');
+        });
+      } catch (error) {
+        console.error('Word export error:', error);
+        showToast('Failed to export Word.');
+      }
     }
 
     function shareOptions(filename) {
@@ -504,8 +519,7 @@
         const encodedCsv = encodeURIComponent(csvContent);
         const whatsappUrl = `https://wa.me/?text=${encodedCsv}`;
         const emailUrl = `mailto:?subject=Student%20Data%20Export&body=${encodedCsv}`;
-        const modal = document.getElementById('confirmationModal');
-        const modalContent = modal.querySelector('.modal-content');
+        const modalContent = document.querySelector('#confirmationModal .modal-content');
         modalContent.innerHTML = `
           <h3 class="text-lg font-medium mb-4">Share ${filename}</h3>
           <div class="flex flex-col gap-2">
@@ -514,9 +528,8 @@
             <button id="modalClose" class="bg-gray-300 text-gray-800 px-4 py-2 rounded-md mt-2">Close</button>
           </div>
         `;
-        modal.style.display = 'flex';
         document.getElementById('modalClose').addEventListener('click', () => {
-          modal.style.display = 'none';
+          document.getElementById('confirmationModal').style.display = 'none';
         });
       });
     }
@@ -533,19 +546,26 @@
         header: true,
         skipEmptyLines: true,
         complete: function (results) {
-          allData = results.data;
+          allData = results.data || [];
+          if (allData.length === 0) {
+            console.warn('No data fetched from CSV.');
+            showToast('No data available from the sheet.');
+          } else {
+            console.log('Available columns in CSV:', Object.keys(allData[0] || {}));
+            console.log('Fetched data:', allData);
+          }
           renderTable(allData);
           updateChart(allData);
           updateProgressBar(allData);
-          console.log('Available columns in CSV:', Object.keys(allData[0] || {}));
-          console.log('Fetched data:', allData);
           loadingSpinner.style.display = 'none';
           showToast('Data reloaded successfully!');
         },
         error: function (error) {
           console.error('Error downloading CSV:', error);
-          showToast('Failed to load data.');
-          loadingSpinner.classList.add('hidden');
+          allData = [];
+          renderTable(allData);
+          showToast('Failed to load data. Check sheet URL or permissions.');
+          loadingSpinner.style.display = 'none';
         }
       });
     }
@@ -567,67 +587,73 @@
         });
       }
 
-      sortedData.forEach(row => {
-        const name = row['Full Name']?.trim() || row['Name']?.trim() || 'N/A';
-        const course = row['Select Course']?.trim() || 'N/A';
-        const number = row['Whatsapp Number']?.replace(/^0/, '92').trim() || 'N/A';
-        const status = row['Status']?.trim().toLowerCase() || 'pending';
-
+      if (sortedData.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="py-3 px-4 border-b">${name}</td>
-          <td class="py-3 px-4 border-b">${course}</td>
-          <td class="py-3 px-4 border-b">${number}</td>
-          <td class="py-3 px-4 border-b">
-            <span class="${status === 'sent' ? 'badge-sent' : 'badge-pending'} px-2 py-1 rounded-full text-sm font-medium">
-              ${status.charAt(0).toUpperCase() + status.slice(1)}
-            </span>
-          </td>
-        `;
+        tr.innerHTML = `<td colspan="5" class="py-3 px-4 text-center text-red-500">No data available.</td>`;
+        tbody.appendChild(tr);
+      } else {
+        sortedData.forEach(row => {
+          const name = row['Full Name']?.trim() || row['Name']?.trim() || 'N/A';
+          const course = row['Select Course']?.trim() || 'N/A';
+          const number = row['Whatsapp Number']?.replace(/^0/, '92').trim() || 'N/A';
+          const status = row['Status']?.trim().toLowerCase() || 'pending';
 
-        const td = document.createElement('td');
-        td.className = 'py-3 px-4 border-b';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="py-3 px-4 border-b">${name}</td>
+            <td class="py-3 px-4 border-b">${course}</td>
+            <td class="py-3 px-4 border-b">${number}</td>
+            <td class="py-3 px-4 border-b">
+              <span class="${status === 'sent' ? 'badge-sent' : 'badge-pending'} px-2 py-1 rounded-full text-sm font-medium">
+                ${status.charAt(0).toUpperCase() + status.slice(1)}
+              </span>
+            </td>
+          `;
 
-        if (status === 'sent') {
-          const sentBadge = document.createElement('span');
-          sentBadge.className = 'message-sent px-4 py-1 rounded-full text-sm font-medium';
-          sentBadge.textContent = 'Message Sent';
-          td.appendChild(sentBadge);
-        } else {
-          const sendLink = document.createElement('a');
-          sendLink.href = `https://wa.me/${number}?text=Assalamualaikum%20${encodeURIComponent(name)},%20aapka%20${encodeURIComponent(course)}%20mein%20admission%20confirm%20hai.`;
-          sendLink.target = '_blank';
-          sendLink.className = 'whatsapp-btn inline-block bg-[#25D366] text-white px-4 py-2 rounded-md text-sm font-medium';
-          sendLink.textContent = 'Send WhatsApp';
+          const td = document.createElement('td');
+          td.className = 'py-3 px-4 border-b';
 
-          sendLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            showConfirmation(`Send message to ${name} on ${number}?`, () => {
-              fetch(scriptURL, {
-                method: 'POST',
-                body: JSON.stringify({ number: number, status: 'Sent' }),
-                headers: { 'Content-Type': 'application/json' }
-              })
-              .then(response => {
-                if (!response.ok) throw new Error('Status update failed');
-                console.log('Status updated successfully');
-                showToast('Message status updated!');
-                loadData();
-                window.open(sendLink.href, '_blank');
-              })
-              .catch(error => {
-                console.error('Error updating status:', error);
-                showToast('Failed to update status.');
+          if (status === 'sent') {
+            const sentBadge = document.createElement('span');
+            sentBadge.className = 'message-sent px-4 py-1 rounded-full text-sm font-medium';
+            sentBadge.textContent = 'Message Sent';
+            td.appendChild(sentBadge);
+          } else {
+            const sendLink = document.createElement('a');
+            sendLink.href = `https://wa.me/${number}?text=Assalamualaikum%20${encodeURIComponent(name)},%20aapka%20${encodeURIComponent(course)}%20mein%20admission%20confirm%20hai.`;
+            sendLink.target = '_blank';
+            sendLink.className = 'whatsapp-btn inline-block bg-[#25D366] text-white px-4 py-2 rounded-md text-sm font-medium';
+            sendLink.textContent = 'Send WhatsApp';
+
+            sendLink.addEventListener('click', (e) => {
+              e.preventDefault();
+              showConfirmation(`Send message to ${name} on ${number}?`, () => {
+                fetch(scriptURL, {
+                  method: 'POST',
+                  body: JSON.stringify({ number: number, status: 'Sent' }),
+                  headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => {
+                  if (!response.ok) throw new Error('Status update failed');
+                  console.log('Status updated successfully');
+                  showToast('Message status updated!');
+                  loadData();
+                  window.open(sendLink.href, '_blank');
+                })
+                .catch(error => {
+                  console.error('Error updating status:', error);
+                  showToast('Failed to update status.');
+                });
               });
             });
-          });
 
-          td.appendChild(sendLink);
-        }
+            td.appendChild(sendLink);
+          }
 
-        tr.appendChild(td);
-        tbody.appendChild(tr);
-      });
+          tr.appendChild(td);
+          tbody.appendChild(tr);
+        });
+      }
     }
 
     function updateChart(data) {
@@ -738,4 +764,62 @@
 
     // Bulk send functionality
     document.getElementById('bulkSendButton').addEventListener('click', () => {
-      const pendingRows = allData.filter(row => (
+      const pendingRows = allData.filter(row => (row['Status']?.trim().toLowerCase() || 'pending') !== 'sent');
+      if (pendingRows.length === 0) {
+        showToast('No pending messages to send.');
+        return;
+      }
+
+      showConfirmation(`Send ${pendingRows.length} pending messages?`, async () => {
+        for (const row of pendingRows) {
+          const number = row['Whatsapp Number']?.replace(/^0/, '92').trim() || 'N/A';
+          const name = row['Full Name']?.trim() || row['Name']?.trim() || 'N/A';
+          const course = row['Select Course']?.trim() || 'N/A';
+
+          try {
+            const response = await fetch(scriptURL, {
+              method: 'POST',
+              body: JSON.stringify({ number: number, status: 'Sent' }),
+              headers: { 'Content-Type': 'application/json' }
+            });
+            if (!response.ok) throw new Error('Status update failed');
+            console.log(`Status updated for ${name}`);
+            const url = `https://wa.me/${number}?text=Assalamualaikum%20${encodeURIComponent(name)},%20aapka%20${encodeURIComponent(course)}%20mein%20admission%20confirm%20hai.`;
+            window.open(url, '_blank');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          } catch (error) {
+            console.error(`Error updating status for ${name}:`, error);
+            showToast(`Failed to update status for ${name}.`);
+          }
+        }
+        loadData();
+        showToast('Bulk sending completed!');
+      });
+    });
+
+    // Export dropdown functionality
+    const exportButton = document.getElementById('exportButton');
+    const exportMenu = document.getElementById('exportMenu');
+
+    exportButton.addEventListener('click', () => {
+      exportMenu.classList.toggle('show');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!exportButton.contains(e.target) && !exportMenu.contains(e.target)) {
+        exportMenu.classList.remove('show');
+      }
+    });
+
+    // Make loadData accessible globally
+    window.loadData = loadData;
+
+    // Load on page load
+    window.addEventListener('DOMContentLoaded', loadData);
+
+    // Reload button event listener
+    document.getElementById('reloadButton').addEventListener('click', loadData);
+  </script>
+</body>
+</html>
