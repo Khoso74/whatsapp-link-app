@@ -36,7 +36,6 @@
     tbody tr {
       transition: background-color 0.2s ease;
     }
-    /* Sticky table header */
     thead th {
       position: sticky;
       top: 0;
@@ -87,7 +86,6 @@
       background-color: var(--badge-pending-bg);
       color: var(--badge-pending-text);
     }
-    /* Theme toggle button */
     .theme-toggle {
       display: flex;
       align-items: center;
@@ -101,6 +99,21 @@
     .theme-icon {
       width: 1.5rem;
       height: 1.5rem;
+    }
+    /* Loading spinner */
+    .loading {
+      display: none;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin-left: 8px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -118,6 +131,7 @@
         </button>
         <button id="reloadButton" class="reload-btn inline-block bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium flex items-center">
           <span class="mr-2">🔄</span> Reload Data
+          <span id="loadingSpinner" class="loading"></span>
         </button>
       </div>
     </div>
@@ -158,7 +172,14 @@
     let allData = [];
 
     function loadData() {
-      Papa.parse(sheetURL, {
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      loadingSpinner.style.display = 'inline-block';
+      
+      // Add cache-busting query parameter
+      const cacheBust = new Date().getTime();
+      const urlWithCacheBust = `${sheetURL}&t=${cacheBust}`;
+
+      Papa.parse(urlWithCacheBust, {
         download: true,
         header: true,
         skipEmptyLines: true,
@@ -167,9 +188,13 @@
           renderTable(allData);
           updateChart(allData);
           console.log('Available columns in CSV:', Object.keys(allData[0] || {}));
+          console.log('Fetched data:', allData);
+          loadingSpinner.style.display = 'none';
         },
         error: function (error) {
           console.error('Error fetching CSV:', error);
+          loadingSpinner.style.display = 'none';
+          alert('Failed to load data. Please try again.');
         }
       });
     }
@@ -216,6 +241,7 @@
           })
           .catch(error => {
             console.error('Error updating status:', error);
+            alert('Failed to update status. Please try again.');
           });
         });
 
@@ -237,7 +263,7 @@
       });
 
       const ctx = document.getElementById('statusChart').getContext('2d');
-      if (ctx.chart) ctx.chart.destroy(); // Destroy existing chart to prevent overlap
+      if (ctx.chart) ctx.chart.destroy();
       ctx.chart = new Chart(ctx, {
         type: 'pie',
         data: {
